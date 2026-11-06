@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Iron Log</title>
+    <link rel="stylesheet" href="/static/styles.css?v=9" />
+  </head>
+  <body>
+    <div id="home-view" class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow brand-line">
+            <span>Iron Log</span>
+            <small class="brand-note">Testing concept by Rodrigo Silva</small>
+          </p>
+          <h1>Training</h1>
+        </div>
+        <button type="button" id="refresh-btn" class="icon-button" aria-label="Refresh routines">
+          <span aria-hidden="true">↻</span>
+        </button>
+      </header>
+
+      <main class="main-content">
+        <section aria-labelledby="quick-start-title">
+          <h2 id="quick-start-title" class="section-title">Quick start</h2>
+          <button type="button" id="empty-workout-btn" class="wide-action">
+            <span class="action-icon" aria-hidden="true">＋</span>
+            Start an empty workout
+          </button>
+        </section>
+
+        <section class="routines-section" aria-labelledby="routines-title">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Your training plan</p>
+              <h2 id="routines-title" class="section-title">Routines</h2>
+            </div>
+            <span id="routine-count" class="count-badge">0</span>
+          </div>
+
+          <div class="routine-tools">
+            <button type="button" id="new-routine-btn" class="tool-button">
+              <span aria-hidden="true">▤</span>
+              New routine
+            </button>
+            <button type="button" id="search-btn" class="tool-button">
+              <span aria-hidden="true">⌕</span>
+              Find
+            </button>
+            <button type="button" id="data-btn" class="tool-button">
+              <span aria-hidden="true">⇅</span>
+              Data
+            </button>
+          </div>
+
+          <label id="search-wrap" class="search-wrap" hidden>
+            <span class="sr-only">Find a routine</span>
+            <input id="routine-search" type="search" placeholder="Search routines or exercises" />
+          </label>
+
+          <div class="list-heading">
+            <span>Saved routines</span>
+            <span id="status" role="status" aria-live="polite"></span>
+          </div>
+          <div id="routine-list" class="routine-list"></div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Primary navigation">
+        <button type="button" class="nav-item">
+          <span aria-hidden="true">⌂</span>
+          <small>Home</small>
+        </button>
+        <button type="button" class="nav-item active" aria-current="page">
+          <span aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" focusable="false" aria-hidden="true">
+              <path d="M2.8 9.4h1.3v5.2H2.8a1.1 1.1 0 0 1-1.1-1.1v-3a1.1 1.1 0 0 1 1.1-1.1Z" />
+              <path d="M5.4 7.1h2.4a1 1 0 0 1 1 1v7.8a1 1 0 0 1-1 1H5.4a1 1 0 0 1-1-1V8.1a1 1 0 0 1 1-1Z" />
+              <path d="M9.4 11.1h5.2v1.8H9.4z" />
+              <path d="M16.2 7.1h2.4a1 1 0 0 1 1 1v7.8a1 1 0 0 1-1 1h-2.4a1 1 0 0 1-1-1V8.1a1 1 0 0 1 1-1Z" />
+              <path d="M19.9 9.4h1.3a1.1 1.1 0 0 1 1.1 1.1v3a1.1 1.1 0 0 1-1.1 1.1h-1.3V9.4Z" />
+            </svg>
+          </span>
+          <small>Training</small>
+        </button>
+        <button type="button" class="nav-item">
+          <span aria-hidden="true">○</span>
+          <small>Profile</small>
+        </button>
+      </nav>
+    </div>
+
+    <dialog id="data-dialog" class="modal">
+      <div class="modal-heading">
+        <div>
+          <p class="section-kicker">Protect your data</p>
+          <h2>Data &amp; alerts</h2>
+        </div>
+        <button type="button" id="close-data-dialog-btn" class="icon-button" aria-label="Close">×</button>
+      </div>
+      <p class="data-dialog-copy">
+        Your routines and workouts are saved on this device only. Export a backup file regularly,
+        or restore one to move your data to another phone.
+      </p>
+      <button type="button" id="export-backup-btn" class="primary-button backup-link">
+        Export backup
+      </button>
+      <label class="restore-label" for="restore-backup-input">Restore backup (.json or old .db)</label>
+      <input id="restore-backup-input" type="file" accept=".json,application/json,.db,application/vnd.sqlite3,application/octet-stream" />
+      <button type="button" id="import-server-btn" class="detail-button import-server-button">
+        Import from PC server
+      </button>
+      <p id="backup-message" role="status" aria-live="polite"></p>
+
+      <fieldset class="alert-settings">
+        <legend>Rest timer alerts</legend>
+        <label class="toggle-row">
+          <input type="checkbox" id="alert-vibrate-toggle" />
+          <span>Vibrate when rest ends</span>
+        </label>
+        <p id="vibrate-unsupported" class="alert-hint" hidden>Vibration is not supported on this browser.</p>
+        <label class="toggle-row">
+          <input type="checkbox" id="alert-sound-toggle" />
+          <span>Beep when rest ends</span>
+        </label>
+        <button type="button" id="test-alert-btn" class="detail-button">Test alert</button>
+      </fieldset>
+    </dialog>
+
+    <div id="routine-details-view" class="app-shell routine-details-view" hidden>
+      <header class="workout-header">
+        <button type="button" id="back-from-details-btn" class="text-button" aria-label="Return to routines">
+          <span aria-hidden="true">‹</span>
+          Routines
+        </button>
+        <span class="preview-badge">Preview</span>
+      </header>
+
+      <section class="routine-detail-hero">
+        <div class="detail-title-row">
+          <p class="eyebrow">Routine details</p>
+          <div class="detail-title-actions">
+            <span class="preview-badge">Preview</span>
+            <button type="button" id="edit-routine-btn" class="detail-edit-button">Edit</button>
+          </div>
+        </div>
+        <h1 id="detail-routine-name">Routine</h1>
+        <p id="detail-routine-summary" class="detail-summary"></p>
+      </section>
+
+      <main>
+        <div class="detail-section-heading">
+          <h2>Exercises</h2>
+          <span id="detail-exercise-count" class="count-badge">0</span>
+        </div>
+        <ol id="detail-exercise-list" class="detail-exercise-list"></ol>
+
+        <form id="routine-edit-form" class="routine-edit-form" hidden>
+          <label>
+            <span>Routine name</span>
+            <input id="edit-routine-name" type="text" maxlength="60" required />
+          </label>
+          <p class="edit-help">Drag exercises by their handle, or use the arrow buttons to change the order. Warm-up sets use their own shorter rest target and are excluded from volume and set totals.</p>
+          <div id="editable-exercise-list" class="editable-exercise-list"></div>
+
+          <section id="add-exercise-form" class="add-exercise-form">
+            <h3>Add a new exercise</h3>
+            <label for="exercise-catalog">Choose from the exercise list</label>
+            <select id="exercise-catalog" name="exerciseCatalog">
+              <option value="">Select an exercise</option>
+              <optgroup label="Chest">
+                <option>Barbell Bench Press</option>
+                <option>Incline Dumbbell Press</option>
+                <option>Machine Chest Press</option>
+                <option>Push-Up</option>
+                <option>Cable Fly</option>
+              </optgroup>
+              <optgroup label="Back">
+                <option>Pull-Up</option>
+                <option>Lat Pulldown</option>
+                <option>Barbell Row</option>
+                <option>Seated Cable Row</option>
+                <option>Single-Arm Dumbbell Row</option>
+              </optgroup>
+              <optgroup label="Shoulders">
+                <option>Overhead Press</option>
+                <option>Shoulder Press</option>
+                <option>Lateral Raise</option>
+                <option>Rear Delt Fly</option>
+                <option>Face Pull</option>
+              </optgroup>
+              <optgroup label="Biceps">
+                <option>Barbell Curl</option>
+                <option>Dumbbell Curl</option>
+                <option>Hammer Curl</option>
+                <option>Preacher Curl</option>
+                <option>Cable Curl</option>
+              </optgroup>
+              <optgroup label="Triceps">
+                <option>Cable Triceps Extension</option>
+                <option>Overhead Triceps Extension</option>
+                <option>Skull Crusher</option>
+                <option>Close-Grip Bench Press</option>
+                <option>Triceps Dip</option>
+              </optgroup>
+              <optgroup label="Quadriceps">
+                <option>Back Squat</option>
+                <option>Front Squat</option>
+                <option>Leg Press</option>
+                <option>Leg Extension</option>
+                <option>Bulgarian Split Squat</option>
+              </optgroup>
+              <optgroup label="Hamstrings and Glutes">
+                <option>Romanian Deadlift</option>
+                <option>Hip Thrust</option>
+                <option>Leg Curl</option>
+                <option>Good Morning</option>
+                <option>Glute Bridge</option>
+              </optgroup>
+              <optgroup label="Calves">
+                <option>Standing Calf Raise</option>
+                <option>Seated Calf Raise</option>
+                <option>Single-Leg Calf Raise</option>
+              </optgroup>
+              <optgroup label="Core">
+                <option>Plank</option>
+                <option>Crunch</option>
+                <option>Hanging Leg Raise</option>
+                <option>Ab Wheel Rollout</option>
+                <option>Cable Wood Chop</option>
+              </optgroup>
+            </select>
+            <p class="exercise-entry-divider"><span>or enter manually</span></p>
+            <label for="new-exercise-name">Exercise name</label>
+            <div class="exercise-manual-entry">
+              <input
+                id="new-exercise-name"
+                name="exerciseName"
+                type="text"
+                maxlength="120"
+                placeholder="Type the exercise name"
+                autocomplete="off"
+              />
+              <button type="button" id="add-edit-exercise-btn" class="add-exercise-button">Add</button>
+            </div>
+            <p id="add-exercise-message" role="status" aria-live="polite"></p>
+          </section>
+
+          <div class="edit-actions">
+            <button type="button" id="cancel-routine-edit-btn" class="detail-button">Cancel</button>
+            <button type="submit" class="primary-button">Save changes</button>
+          </div>
+          <p id="routine-edit-message" role="status" aria-live="polite"></p>
+        </form>
+
+        <button type="button" id="start-detail-workout-btn" class="primary-button detail-start-button">
+          Start workout
+        </button>
+      </main>
+    </div>
+
+    <div id="active-workout-view" class="app-shell active-workout-view" hidden>
+      <header class="workout-header">
+        <button type="button" id="back-to-routines-btn" class="text-button" aria-label="Return to routines">
+          <span aria-hidden="true">‹</span>
+          Routines
+        </button>
+        <button type="button" id="finish-workout-btn" class="finish-button">Finish</button>
+      </header>
+
+      <section class="workout-title-block">
+        <p class="eyebrow">Active workout</p>
+        <h1 id="workout-name">Workout</h1>
+      </section>
+
+      <section class="workout-stats" aria-label="Workout progress">
+        <div>
+          <span>Duration</span>
+          <strong id="workout-duration">00:00</strong>
+        </div>
+        <div>
+          <span>Volume</span>
+          <strong id="workout-volume">0 kg</strong>
+        </div>
+        <div>
+          <span>Sets</span>
+          <strong id="completed-sets">0</strong>
+        </div>
+      </section>
+
+      <section id="rest-timer" class="rest-timer" aria-live="polite" hidden>
+        <div>
+          <span id="rest-timer-label">Rest timer</span>
+          <strong id="rest-timer-countdown">01:30</strong>
+        </div>
+        <div class="rest-timer-actions">
+          <button type="button" id="add-rest-time-btn">+15 sec</button>
+          <button type="button" id="skip-rest-timer-btn">Skip</button>
+        </div>
+      </section>
+
+      <p id="workout-message" class="workout-message" role="status" aria-live="polite"></p>
+      <main id="active-exercise-list" class="active-exercise-list"></main>
+    </div>
+
+    <dialog id="routine-dialog" class="modal">
+      <form id="routine-form" method="dialog">
+        <div class="modal-heading">
+          <div>
+            <p class="section-kicker">Build your plan</p>
+            <h2>New routine</h2>
+          </div>
+          <button type="button" id="close-dialog-btn" class="icon-button" aria-label="Close">×</button>
+        </div>
+        <label>
+          <span>Routine name</span>
+          <input id="routine-name" name="name" maxlength="60" placeholder="Upper body" required />
+        </label>
+        <label>
+          <span>Exercises, one per line</span>
+          <textarea id="routine-exercises" name="exercises" rows="6" placeholder="Bench press&#10;Lat pulldown&#10;Lateral raise" required></textarea>
+        </label>
+        <p id="form-error" class="form-error" role="alert"></p>
+        <button type="submit" class="primary-button">Save routine</button>
+      </form>
+    </dialog>
+
+    <script src="/static/store.js?v=1"></script>
+    <script src="/static/app.js?v=8"></script>
+  </body>
+</html>
